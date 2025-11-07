@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Factory, DollarSign, TrendingUp, Users, MapPin } from "lucide-react";
+import PercentageSlider from "./PercentageSlider";
 
 interface DecisionPanelProps {
   game: any;
@@ -208,78 +209,24 @@ const DecisionPanel = ({ game, team }: DecisionPanelProps) => {
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <Label>Phone Tier Allocation (Total must be 100%)</Label>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-xs text-neon-gold">
-                      Luxury (₹120k+)
-                    </Label>
-                    <Input
-                      type="number"
-                      value={decisions.luxury_percentage}
-                      onChange={(e) =>
-                        updateDecision("luxury_percentage", Number(e.target.value))
-                      }
-                      min="0"
-                      max="100"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs text-primary">
-                      Flagship (₹65k-120k)
-                    </Label>
-                    <Input
-                      type="number"
-                      value={decisions.flagship_percentage}
-                      onChange={(e) =>
-                        updateDecision("flagship_percentage", Number(e.target.value))
-                      }
-                      min="0"
-                      max="100"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs text-neon-cyan">
-                      Mid-tier (₹25k-65k)
-                    </Label>
-                    <Input
-                      type="number"
-                      value={decisions.midtier_percentage}
-                      onChange={(e) =>
-                        updateDecision("midtier_percentage", Number(e.target.value))
-                      }
-                      min="0"
-                      max="100"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">
-                      Lower-tier (₹0-25k)
-                    </Label>
-                    <Input
-                      type="number"
-                      value={decisions.lowertier_percentage}
-                      onChange={(e) =>
-                        updateDecision("lowertier_percentage", Number(e.target.value))
-                      }
-                      min="0"
-                      max="100"
-                    />
-                  </div>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  Total:{" "}
-                  {decisions.luxury_percentage +
-                    decisions.flagship_percentage +
-                    decisions.midtier_percentage +
-                    decisions.lowertier_percentage}
-                  %
-                </div>
-              </div>
+              <PercentageSlider
+                label="Phone Tier Allocation (Total must be 100%)"
+                segments={[
+                  { name: "Luxury", value: decisions.luxury_percentage, color: "#FFD700" },
+                  { name: "Flagship", value: decisions.flagship_percentage, color: "#00D9FF" },
+                  { name: "Mid-tier", value: decisions.midtier_percentage, color: "#0EA5E9" },
+                  { name: "Lower-tier", value: decisions.lowertier_percentage, color: "#64748B" },
+                ]}
+                onChange={(segments) => {
+                  setDecisions(prev => ({
+                    ...prev,
+                    luxury_percentage: segments[0].value,
+                    flagship_percentage: segments[1].value,
+                    midtier_percentage: segments[2].value,
+                    lowertier_percentage: segments[3].value,
+                  }));
+                }}
+              />
             </TabsContent>
 
             <TabsContent value="pricing" className="space-y-4 mt-4">
@@ -409,39 +356,32 @@ const DecisionPanel = ({ game, team }: DecisionPanelProps) => {
             </TabsContent>
 
             <TabsContent value="markets" className="space-y-4 mt-4">
-              <Label className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                Market Allocation by City (Total must be 100%)
-              </Label>
-              <div className="grid grid-cols-2 gap-4">
+              {cities.length > 0 && (
+                <PercentageSlider
+                  label="Market Allocation by City (Total must be 100%)"
+                  segments={cities.map((city, idx) => ({
+                    name: city.city_name,
+                    value: marketAllocations[city.city_name] || 0,
+                    color: ["#00D9FF", "#0EA5E9", "#3B82F6", "#6366F1", "#8B5CF6"][idx % 5],
+                  }))}
+                  onChange={(segments) => {
+                    const newAllocations: { [key: string]: number } = {};
+                    segments.forEach((seg) => {
+                      newAllocations[seg.name] = seg.value;
+                    });
+                    setMarketAllocations(newAllocations);
+                  }}
+                />
+              )}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4 p-4 rounded-lg bg-primary/5 border border-primary/10">
                 {cities.map((city) => (
-                  <div key={city.id} className="space-y-2">
-                    <Label className="text-xs">{city.city_name}</Label>
-                    <Input
-                      type="number"
-                      value={marketAllocations[city.city_name] || 0}
-                      onChange={(e) =>
-                        setMarketAllocations((prev) => ({
-                          ...prev,
-                          [city.city_name]: Number(e.target.value),
-                        }))
-                      }
-                      min="0"
-                      max="100"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Pop: {(city.population / 1000).toFixed(0)}k
-                    </p>
+                  <div key={city.id} className="text-sm">
+                    <span className="font-medium">{city.city_name}</span>
+                    <span className="text-muted-foreground text-xs ml-2">
+                      Pop: {(city.population / 1000000).toFixed(1)}M
+                    </span>
                   </div>
                 ))}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Total:{" "}
-                {Object.values(marketAllocations).reduce(
-                  (sum, val) => sum + val,
-                  0
-                )}
-                %
               </div>
             </TabsContent>
           </Tabs>

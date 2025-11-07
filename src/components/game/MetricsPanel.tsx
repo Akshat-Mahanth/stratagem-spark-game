@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { TrendingUp, DollarSign, Package, Users, TrendingDown } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 interface MetricsPanelProps {
   team: any;
@@ -194,34 +195,101 @@ const MetricsPanel = ({ team, currentQuarter }: MetricsPanelProps) => {
           </div>
 
           {metrics.length > 1 && (
-            <Card className="strategic-gradient border-primary/20">
-              <CardHeader>
-                <CardTitle>Historical Performance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {metrics.map((m) => (
-                    <div
-                      key={m.id}
-                      className="flex justify-between items-center p-3 rounded bg-primary/5 border border-primary/10"
-                    >
-                      <span className="font-semibold">Quarter {m.quarter}</span>
-                      <div className="flex gap-6 text-sm">
-                        <span>Revenue: {formatCurrency(m.revenue)}</span>
-                        <span
-                          className={m.profit >= 0 ? "text-profit" : "text-loss"}
-                        >
-                          Profit: {formatCurrency(m.profit)}
-                        </span>
-                        <span className="text-neon-gold">
-                          Market Share: {m.market_share.toFixed(2)}%
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <>
+              <Card className="strategic-gradient border-primary/20">
+                <CardHeader>
+                  <CardTitle>Revenue & Profit Trends</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={metrics}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--primary) / 0.2)" />
+                      <XAxis 
+                        dataKey="quarter" 
+                        label={{ value: 'Quarter', position: 'insideBottom', offset: -5 }}
+                        stroke="hsl(var(--foreground))"
+                      />
+                      <YAxis 
+                        stroke="hsl(var(--foreground))"
+                        tickFormatter={(value) => `₹${(value / 1000000).toFixed(1)}M`}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--background))',
+                          border: '1px solid hsl(var(--primary) / 0.3)',
+                          borderRadius: '8px'
+                        }}
+                        formatter={(value: any) => formatCurrency(value)}
+                      />
+                      <Legend />
+                      <Line 
+                        type="monotone" 
+                        dataKey="revenue" 
+                        stroke="hsl(var(--profit))" 
+                        strokeWidth={2}
+                        dot={{ fill: 'hsl(var(--profit))' }}
+                        name="Revenue"
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="profit" 
+                        stroke="hsl(var(--primary))" 
+                        strokeWidth={2}
+                        dot={{ fill: 'hsl(var(--primary))' }}
+                        name="Profit"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <Card className="strategic-gradient border-primary/20">
+                <CardHeader>
+                  <CardTitle>Market Share & Customer Satisfaction</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={metrics}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--primary) / 0.2)" />
+                      <XAxis 
+                        dataKey="quarter" 
+                        label={{ value: 'Quarter', position: 'insideBottom', offset: -5 }}
+                        stroke="hsl(var(--foreground))"
+                      />
+                      <YAxis 
+                        stroke="hsl(var(--foreground))"
+                        tickFormatter={(value) => `${value.toFixed(0)}%`}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--background))',
+                          border: '1px solid hsl(var(--primary) / 0.3)',
+                          borderRadius: '8px'
+                        }}
+                        formatter={(value: any) => `${value.toFixed(2)}%`}
+                      />
+                      <Legend />
+                      <Line 
+                        type="monotone" 
+                        dataKey="market_share" 
+                        stroke="hsl(var(--neon-gold))" 
+                        strokeWidth={2}
+                        dot={{ fill: 'hsl(var(--neon-gold))' }}
+                        name="Market Share"
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="customer_satisfaction" 
+                        stroke="hsl(var(--neon-cyan))" 
+                        strokeWidth={2}
+                        dot={{ fill: 'hsl(var(--neon-cyan))' }}
+                        name="Customer Satisfaction"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </>
           )}
         </>
       ) : (
