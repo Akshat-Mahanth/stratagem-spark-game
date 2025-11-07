@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -94,6 +94,20 @@ const Game = () => {
 
   if (game.status === "waiting") {
     return <WaitingRoom game={game} team={team} />;
+  }
+
+  // Host view when no team
+  if (!team) {
+    const HostDashboard = lazy(() => import("@/components/game/HostDashboard"));
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+      }>
+        <HostDashboard game={game} />
+      </Suspense>
+    );
   }
 
   return <GameDashboard game={game} team={team} />;
