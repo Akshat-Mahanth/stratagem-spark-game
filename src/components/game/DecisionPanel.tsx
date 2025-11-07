@@ -76,6 +76,42 @@ const DecisionPanel = ({ game, team }: DecisionPanelProps) => {
       return;
     }
 
+    // Validate capital constraints
+    const productionCost = decisions.units_produced * decisions.cost_per_unit;
+    const totalCosts =
+      productionCost +
+      decisions.marketing_budget +
+      decisions.rnd_budget +
+      decisions.employee_budget +
+      decisions.debt_repayment;
+
+    const availableFunds = team.current_capital + decisions.new_debt;
+
+    if (totalCosts > availableFunds) {
+      toast.error(
+        `Total costs (₹${totalCosts.toLocaleString()}) exceed available funds (₹${availableFunds.toLocaleString()})`
+      );
+      return;
+    }
+
+    // Validate debt ceiling
+    const newTotalDebt = team.total_debt + decisions.new_debt - decisions.debt_repayment;
+
+    if (newTotalDebt > team.debt_ceiling) {
+      toast.error(
+        `New debt (₹${newTotalDebt.toLocaleString()}) would exceed debt ceiling (₹${team.debt_ceiling.toLocaleString()})`
+      );
+      return;
+    }
+
+    // Validate debt repayment doesn't exceed current debt
+    if (decisions.debt_repayment > team.total_debt) {
+      toast.error(
+        `Debt repayment (₹${decisions.debt_repayment.toLocaleString()}) cannot exceed current debt (₹${team.total_debt.toLocaleString()})`
+      );
+      return;
+    }
+
     setSaving(true);
 
     try {
