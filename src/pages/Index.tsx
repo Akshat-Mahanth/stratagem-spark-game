@@ -1,10 +1,35 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Building2, Users, TrendingUp, Trophy } from "lucide-react";
+import { Building2, Users, TrendingUp, Trophy, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const navigate = useNavigate();
+  const [dbStatus, setDbStatus] = useState<'checking' | 'connected' | 'error'>('checking');
+  const [dbMessage, setDbMessage] = useState('Checking connection...');
+
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        const { error } = await supabase.from('games').select('count').limit(1);
+        
+        if (error) {
+          setDbStatus('error');
+          setDbMessage(`Connection error: ${error.message}`);
+        } else {
+          setDbStatus('connected');
+          setDbMessage('Database connected successfully');
+        }
+      } catch (err) {
+        setDbStatus('error');
+        setDbMessage(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      }
+    };
+
+    checkConnection();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -16,6 +41,29 @@ const Index = () => {
           <p className="text-2xl text-muted-foreground mb-8">
             Compete in a thrilling phone manufacturing simulation
           </p>
+          
+          {/* Database Connection Status */}
+          <div className="flex items-center justify-center gap-2 mb-6">
+            {dbStatus === 'checking' && (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">{dbMessage}</span>
+              </>
+            )}
+            {dbStatus === 'connected' && (
+              <>
+                <CheckCircle className="h-5 w-5 text-green-500" />
+                <span className="text-sm text-green-500">{dbMessage}</span>
+              </>
+            )}
+            {dbStatus === 'error' && (
+              <>
+                <XCircle className="h-5 w-5 text-red-500" />
+                <span className="text-sm text-red-500">{dbMessage}</span>
+              </>
+            )}
+          </div>
+          
           <div className="flex gap-4 justify-center">
             <Button
               size="lg"

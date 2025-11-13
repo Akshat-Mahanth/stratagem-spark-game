@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { TrendingUp, DollarSign, Package, Users, TrendingDown } from "lucide-react";
+import { TrendingUp, Banknote, Package, Users, TrendingDown } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 interface MetricsPanelProps {
@@ -78,7 +78,7 @@ const MetricsPanel = ({ team, currentQuarter }: MetricsPanelProps) => {
             <Card className="metric-card border-primary/20">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-primary" />
+                  <Banknote className="h-4 w-4 text-primary" />
                   Profit
                 </CardTitle>
               </CardHeader>

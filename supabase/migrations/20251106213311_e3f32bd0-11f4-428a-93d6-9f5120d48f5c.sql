@@ -97,8 +97,8 @@ CREATE TABLE public.team_metrics (
   
   -- Performance metrics
   demand_satisfaction_rate numeric NOT NULL DEFAULT 0,
-  customer_satisfaction numeric NOT NULL DEFAULT 0,
-  employee_productivity numeric NOT NULL DEFAULT 0,
+  customer_satisfaction numeric NOT NULL DEFAULT 100,
+  employee_productivity numeric NOT NULL DEFAULT 100,
   market_share numeric NOT NULL DEFAULT 0,
   
   -- Operational metrics

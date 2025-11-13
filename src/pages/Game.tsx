@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import GameDashboard from "@/components/game/GameDashboard";
 import WaitingRoom from "@/components/game/WaitingRoom";
+import WinScreen from "@/components/game/WinScreen";
 
 const Game = () => {
   const { gameId } = useParams();
@@ -53,7 +54,7 @@ const Game = () => {
 
     // Set up realtime subscription
     const channel = supabase
-      .channel("game-updates")
+      .channel(`game-updates-${gameId}`)
       .on(
         "postgres_changes",
         {
@@ -63,10 +64,15 @@ const Game = () => {
           filter: `id=eq.${gameId}`,
         },
         (payload) => {
-          setGame(payload.new);
+          console.log("Game update received:", payload);
+          if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
+            setGame(payload.new);
+          }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Game subscription status:", status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -94,6 +100,11 @@ const Game = () => {
 
   if (game.status === "waiting") {
     return <WaitingRoom game={game} team={team} />;
+  }
+
+  // Show win screen when game is completed
+  if (game.status === "completed") {
+    return <WinScreen game={game} team={team} />;
   }
 
   // Host view when no team

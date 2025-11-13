@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, TrendingUp, DollarSign, BarChart3 } from "lucide-react";
+import { Clock, TrendingUp, Banknote, BarChart3 } from "lucide-react";
 import QuarterTimer from "./QuarterTimer";
 import DecisionPanel from "./DecisionPanel";
 import CompetitorPanel from "./CompetitorPanel";
 import MetricsPanel from "./MetricsPanel";
 import StockTrading from "./StockTrading";
+import StockChart from "./StockChart";
+import DynamicMetricsPanel from "./DynamicMetricsPanel";
 
 interface GameDashboardProps {
   game: any;
@@ -76,9 +78,27 @@ const GameDashboard = ({ game, team }: GameDashboardProps) => {
       )
       .subscribe();
 
+    const gameChannel = supabase
+      .channel("game-updates-dashboard")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "games",
+          filter: `id=eq.${game.id}`,
+        },
+        () => {
+          // Trigger a page refresh or re-fetch when game updates
+          window.location.reload();
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(metricsChannel);
       supabase.removeChannel(teamsChannel);
+      supabase.removeChannel(gameChannel);
     };
   }, [team, game.current_quarter, game.id]);
 
@@ -102,8 +122,15 @@ const GameDashboard = ({ game, team }: GameDashboardProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
+      <div className="flex gap-4 p-4">
+        {/* Fixed Left Sidebar - Dynamic Metrics */}
+        <div className="w-80 flex-shrink-0 sticky top-4 h-screen">
+          <DynamicMetricsPanel team={team} game={game} />
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -120,7 +147,7 @@ const GameDashboard = ({ game, team }: GameDashboardProps) => {
           <Card className="metric-card border-primary/20">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-neon-cyan" />
+                <Banknote className="h-4 w-4 text-neon-cyan" />
                 Capital
               </CardTitle>
             </CardHeader>
@@ -170,6 +197,9 @@ const GameDashboard = ({ game, team }: GameDashboardProps) => {
           </Card>
         </div>
 
+        {/* Stock Chart */}
+        <StockChart gameId={game.id} teamId={team.id} height={250} gameStatus={game.status} />
+
         {/* Main Content Tabs */}
         <Tabs defaultValue="decisions" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
@@ -195,6 +225,7 @@ const GameDashboard = ({ game, team }: GameDashboardProps) => {
             <StockTrading game={game} team={team} allTeams={allTeams} />
           </TabsContent>
         </Tabs>
+        </div>
       </div>
     </div>
   );

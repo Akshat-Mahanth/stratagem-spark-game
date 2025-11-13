@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { TrendingUp, DollarSign } from "lucide-react";
+import { TrendingUp, Banknote } from "lucide-react";
 
 interface StockTradingProps {
   game: any;
@@ -20,7 +20,7 @@ const StockTrading = ({ game, team, allTeams }: StockTradingProps) => {
 
   const otherTeams = allTeams.filter((t) => t.id !== team.id);
 
-  const handleBuyShares = async () => {
+  const handleTrade = async () => {
     if (!selectedTeam) {
       toast.error("Please select a team");
       return;
@@ -32,46 +32,38 @@ const StockTrading = ({ game, team, allTeams }: StockTradingProps) => {
     }
 
     const targetTeam = otherTeams.find((t) => t.id === selectedTeam);
-    if (!targetTeam) return;
+    if (!targetTeam) {
+      toast.error("Invalid team selected");
+      return;
+    }
 
-    const totalCost = shares * targetTeam.stock_price;
+    const totalAmount = targetTeam.stock_price * shares;
 
-    if (totalCost > team.current_capital) {
-      toast.error("Insufficient capital for this purchase");
+    if (totalAmount > team.current_capital) {
+      toast.error("Insufficient capital for this trade");
       return;
     }
 
     setTrading(true);
 
     try {
-      // Record the trade
-      const { error: tradeError } = await supabase.from("stock_trades").insert({
+      const tradeData = {
         buyer_team_id: team.id,
         target_team_id: selectedTeam,
         shares_bought: shares,
         price_per_share: targetTeam.stock_price,
-        total_cost: totalCost,
+        total_cost: totalAmount,
         quarter: game.current_quarter,
-      });
+      };
 
-      if (tradeError) throw tradeError;
+      const { error } = await supabase.from("stock_trades").insert(tradeData);
 
-      // Update buyer's capital
-      const { error: buyerError } = await supabase
-        .from("teams")
-        .update({
-          current_capital: team.current_capital - totalCost,
-        })
-        .eq("id", team.id);
+      if (error) throw error;
 
-      if (buyerError) throw buyerError;
-
-      toast.success(
-        `Successfully bought ${shares} shares of ${targetTeam.team_name} for ${totalCost.toLocaleString()} ₹`
-      );
+      toast.success(`Successfully invested in ${shares} shares of ${targetTeam.team_name}`);
       setShares(0);
       setSelectedTeam("");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error buying shares:", error);
       toast.error("Failed to complete trade");
     } finally {
@@ -161,7 +153,7 @@ const StockTrading = ({ game, team, allTeams }: StockTradingProps) => {
                   <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm text-muted-foreground">
-                        Total Cost
+                        Total Investment
                       </span>
                       <span className="font-bold text-lg">
                         {formatCurrency(
@@ -175,12 +167,12 @@ const StockTrading = ({ game, team, allTeams }: StockTradingProps) => {
                 )}
 
                 <Button
-                  onClick={handleBuyShares}
+                  onClick={handleTrade}
                   disabled={trading || shares <= 0}
                   className="w-full h-12 shadow-glow"
                 >
-                  <DollarSign className="mr-2 h-5 w-5" />
-                  {trading ? "Processing..." : "Buy Shares"}
+                  <Banknote className="mr-2 h-5 w-5" />
+                  {trading ? "Processing..." : "Invest in Shares"}
                 </Button>
               </div>
             )}

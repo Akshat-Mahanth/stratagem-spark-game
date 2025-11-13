@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { TrendingUp, DollarSign, BarChart3, Activity } from "lucide-react";
+import { TrendingUp, Banknote, BarChart3, Activity } from "lucide-react";
 
 interface CompetitorPanelProps {
   gameId: string;
@@ -66,7 +66,7 @@ const CompetitorPanel = ({ gameId, currentTeamId, allTeams }: CompetitorPanelPro
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
-                        <DollarSign className="h-3 w-3" />
+                        <Banknote className="h-3 w-3" />
                         Stock Price
                       </div>
                       <div className="text-lg font-semibold">

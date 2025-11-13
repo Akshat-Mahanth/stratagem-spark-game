@@ -34,7 +34,7 @@ const WaitingRoom = ({ game, team }: WaitingRoomProps) => {
 
     // Subscribe to team changes
     const channel = supabase
-      .channel("teams-updates")
+      .channel(`teams-updates-${game.id}`)
       .on(
         "postgres_changes",
         {
@@ -43,11 +43,14 @@ const WaitingRoom = ({ game, team }: WaitingRoomProps) => {
           table: "teams",
           filter: `game_id=eq.${game.id}`,
         },
-        () => {
+        (payload) => {
+          console.log("Team update received:", payload);
           fetchTeams();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Teams subscription status:", status);
+      });
 
     return () => {
       supabase.removeChannel(channel);

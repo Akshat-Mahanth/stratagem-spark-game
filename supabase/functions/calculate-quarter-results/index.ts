@@ -61,8 +61,13 @@ Deno.serve(async (req) => {
       .eq('game_id', gameId)
 
     if (!teams || teams.length === 0) {
-      throw new Error('No teams found')
+      return new Response(
+        JSON.stringify({ error: 'No teams found for this game' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
     }
+
+    console.log(`Processing quarter ${quarter} for ${teams.length} teams`)
 
     // Fetch all city data
     const { data: cities } = await supabase
@@ -76,11 +81,15 @@ Deno.serve(async (req) => {
       .eq('quarter', quarter)
       .in('team_id', teams.map(t => t.id))
 
+    console.log(`Found ${decisions?.length || 0} decisions for quarter ${quarter}`)
+
     // Fetch market allocations
     const { data: allocations } = await supabase
       .from('market_allocations')
       .select('*')
       .in('decision_id', (decisions || []).map(d => d.id))
+
+    console.log(`Found ${allocations?.length || 0} market allocations`)
 
     // Calculate results for each team
     const metricsToInsert = []
@@ -100,8 +109,8 @@ Deno.serve(async (req) => {
         .eq('quarter', quarter - 1)
         .maybeSingle()
       
-      const previousSatisfaction = prevMetrics?.customer_satisfaction || 50
-      const previousProductivity = prevMetrics?.employee_productivity || 50
+      const previousSatisfaction = prevMetrics?.customer_satisfaction || 100
+      const previousProductivity = prevMetrics?.employee_productivity || 100
       
       if (!decision) {
         // If no decision submitted, carry forward previous state
@@ -112,8 +121,8 @@ Deno.serve(async (req) => {
           profit: 0,
           cash_flow: -team.total_debt * 0.02, // Interest payment
           roi: 0,
-          customer_satisfaction: Math.max(0, previousSatisfaction - 5), // Decay
-          employee_productivity: Math.max(0, previousProductivity - 5), // Decay
+          customer_satisfaction: Math.max(0, previousSatisfaction - 10), // Decay
+          employee_productivity: Math.max(0, previousProductivity - 10), // Decay
           market_share: team.market_share,
           units_sold: 0,
           inventory_remaining: 0,
@@ -206,9 +215,18 @@ Deno.serve(async (req) => {
       // Calculate profit
       const profit = totalRevenue - totalCosts - inventoryHoldingCost
 
-      // Calculate customer satisfaction (influenced by R&D)
+      // Calculate customer satisfaction (influenced by R&D and Marketing)
       const rndImpact = Math.min(20, (decision.rnd_budget / 250000)) // Every 250k gives 1 point, max 20
-      const customerSatisfaction = Math.min(100, previousSatisfaction + rndImpact * 0.5)
+      const marketingImpact = Math.min(15, (decision.marketing_budget / 500000)) // Every 500k gives 1 point, max 15
+      const demandSatisfactionImpact = (demandSatisfactionRate - 50) * 0.2 // Demand satisfaction affects customer satisfaction
+      
+      const customerSatisfaction = Math.min(100, Math.max(0, 
+        previousSatisfaction + 
+        rndImpact * 0.5 + 
+        marketingImpact * 0.7 + 
+        demandSatisfactionImpact - 
+        2 // Natural decay
+      ))
 
       // Calculate employee productivity (influenced by employee budget)
       const employeeImpact = Math.min(20, (decision.employee_budget / 250000))
@@ -273,11 +291,19 @@ Deno.serve(async (req) => {
     }
 
     // Insert metrics
-    await supabase.from('team_metrics').insert(metricsToInsert)
+    const { error: metricsError } = await supabase.from('team_metrics').insert(metricsToInsert)
+    if (metricsError) {
+      console.error('Error inserting metrics:', metricsError)
+      throw new Error(`Failed to insert metrics: ${metricsError.message}`)
+    }
 
     // Update teams
     for (const update of teamUpdates) {
-      await supabase.from('teams').update(update).eq('id', update.id)
+      const { error: updateError } = await supabase.from('teams').update(update).eq('id', update.id)
+      if (updateError) {
+        console.error('Error updating team:', updateError)
+        throw new Error(`Failed to update team: ${updateError.message}`)
+      }
     }
 
     return new Response(

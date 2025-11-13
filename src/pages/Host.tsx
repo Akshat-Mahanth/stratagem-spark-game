@@ -10,6 +10,8 @@ import { Loader2 } from "lucide-react";
 
 const Host = () => {
   const [hostName, setHostName] = useState("");
+  const [maxQuarters, setMaxQuarters] = useState(8);
+  const [quarterDuration, setQuarterDuration] = useState(10);
   const [isCreating, setIsCreating] = useState(false);
   const navigate = useNavigate();
 
@@ -28,6 +30,23 @@ const Host = () => {
     setIsCreating(true);
 
     try {
+      // Clean up old inactive games (older than 24 hours) and all completed games
+      const oneDayAgo = new Date();
+      oneDayAgo.setHours(oneDayAgo.getHours() - 24);
+      
+      // Delete all completed games (regardless of age)
+      await supabase
+        .from("games")
+        .delete()
+        .eq("status", "completed");
+      
+      // Delete old waiting games
+      await supabase
+        .from("games")
+        .delete()
+        .lt("created_at", oneDayAgo.toISOString())
+        .eq("status", "waiting");
+
       const gameCode = generateGameCode();
       
       const { data, error } = await supabase
@@ -36,8 +55,8 @@ const Host = () => {
           game_code: gameCode,
           host_name: hostName,
           status: "waiting",
-          max_quarters: 8,
-          quarter_duration_seconds: 600,
+          max_quarters: maxQuarters,
+          quarter_duration_seconds: quarterDuration * 60,
           starting_capital: 10000000,
         })
         .select()
@@ -87,11 +106,38 @@ const Host = () => {
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="maxQuarters">Total Quarters</Label>
+                  <Input
+                    id="maxQuarters"
+                    type="number"
+                    min="4"
+                    max="16"
+                    value={maxQuarters}
+                    onChange={(e) => setMaxQuarters(Number(e.target.value))}
+                    className="h-12 text-lg"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="quarterDuration">Minutes per Quarter</Label>
+                  <Input
+                    id="quarterDuration"
+                    type="number"
+                    min="5"
+                    max="30"
+                    value={quarterDuration}
+                    onChange={(e) => setQuarterDuration(Number(e.target.value))}
+                    className="h-12 text-lg"
+                  />
+                </div>
+              </div>
+
               <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
                 <h3 className="font-semibold mb-2 text-neon-cyan">Game Settings:</h3>
                 <ul className="space-y-1 text-sm text-muted-foreground">
-                  <li>• 8 quarters total</li>
-                  <li>• 10 minutes per quarter</li>
+                  <li>• {maxQuarters} quarters total</li>
+                  <li>• {quarterDuration} minutes per quarter</li>
                   <li>• ₹1 crore starting capital</li>
                   <li>• Real-time competition & trading</li>
                 </ul>
