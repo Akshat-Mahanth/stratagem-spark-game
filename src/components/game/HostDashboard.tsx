@@ -32,8 +32,13 @@ const HostDashboard = ({ game }: HostDashboardProps) => {
 
     fetchTeams();
 
+    // Periodic refresh every 30 seconds as backup
+    const refreshInterval = setInterval(() => {
+      fetchTeams();
+    }, 30000);
+
     const channel = supabase
-      .channel(`host-teams-updates-${game.id}`)
+      .channel(`host-teams-updates-${game.id}-${Date.now()}`)
       .on(
         "postgres_changes",
         {
@@ -50,10 +55,17 @@ const HostDashboard = ({ game }: HostDashboardProps) => {
       )
       .subscribe((status) => {
         console.log("Host: Teams subscription status:", status);
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          console.error("Host: Teams subscription failed, retrying...");
+          setTimeout(() => {
+            fetchTeams();
+          }, 2000);
+        }
       });
 
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(refreshInterval);
     };
   }, [game.id]);
 

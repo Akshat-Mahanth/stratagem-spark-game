@@ -28,12 +28,12 @@ const SpeedometerChart = ({
     { name: 'hidden', value: 100 } // This creates the bottom half to hide
   ];
 
-  // Color scheme for different value ranges
+  // High contrast color scheme for maximum readability
   const getColor = (pct: number) => {
-    if (pct >= 80) return "#FF1E00"; // Red for high values
-    if (pct >= 60) return "#CEDC00"; // Yellow for medium-high
-    if (pct >= 40) return "#00D2BE"; // Teal for medium
-    return "#006747"; // Green for low values
+    if (pct >= 80) return "#B91C1C"; // Dark red for high values (maximum contrast)
+    if (pct >= 60) return "#D97706"; // Dark orange for medium-high (high contrast)
+    if (pct >= 40) return "#047857"; // Dark emerald for medium (high contrast)
+    return "#064E3B"; // Very dark emerald for low values (maximum contrast)
   };
 
   const fillColor = color === "#006747" ? getColor(percentage) : color;
@@ -63,14 +63,14 @@ const SpeedometerChart = ({
         
         {/* Center value display */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pt-4">
-          <div className="text-2xl font-bold text-gray-800">
+          <div className="text-2xl font-bold text-black">
             {typeof value === 'number' ? value.toFixed(1) : value}
           </div>
-          <div className="text-xs text-gray-500">{unit}</div>
+          <div className="text-xs text-gray-700 font-bold">{unit}</div>
         </div>
 
         {/* Scale markers */}
-        <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-400 px-2">
+        <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-700 font-bold px-2">
           <span>0</span>
           <span>{(maxValue / 2).toFixed(0)}</span>
           <span>{maxValue}</span>

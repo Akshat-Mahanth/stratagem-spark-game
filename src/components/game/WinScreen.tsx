@@ -180,7 +180,10 @@ const WinScreen = ({ game, team }: WinScreenProps) => {
           </Button>
           <Button
             size="lg"
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              // Scroll to top to show game stats
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
             className="bg-gradient-to-r from-blue-600 to-purple-600 text-white"
           >
             View Game Stats

@@ -34,7 +34,7 @@ const WaitingRoom = ({ game, team }: WaitingRoomProps) => {
 
     // Subscribe to team changes
     const channel = supabase
-      .channel(`teams-updates-${game.id}`)
+      .channel(`waiting-teams-updates-${game.id}-${Date.now()}`)
       .on(
         "postgres_changes",
         {
@@ -50,6 +50,12 @@ const WaitingRoom = ({ game, team }: WaitingRoomProps) => {
       )
       .subscribe((status) => {
         console.log("Teams subscription status:", status);
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          console.error("Teams subscription failed, retrying...");
+          setTimeout(() => {
+            fetchTeams();
+          }, 2000);
+        }
       });
 
     return () => {

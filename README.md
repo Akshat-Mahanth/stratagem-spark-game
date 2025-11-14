@@ -1,24 +1,14 @@
-# Welcome to your Lovable project
+# Strategic Manufacturing - Business Simulation Game
 
-## Project info
+## Project Overview
 
-**URL**: https://lovable.dev/projects/a32612a8-8a17-4a09-851a-585f7c71a0f6
+A real-time business simulation game focused on phone manufacturing competition. Built with React, TypeScript, Vite, and Supabase.
 
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/a32612a8-8a17-4a09-851a-585f7c71a0f6) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
+## How to edit this code
 
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Clone this repo and push changes. The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
 Follow these steps:
 
@@ -60,14 +50,16 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
+## How to deploy this project
 
-Simply open [Lovable](https://lovable.dev/projects/a32612a8-8a17-4a09-851a-585f7c71a0f6) and click on Share -> Publish.
+You can deploy this project using various hosting platforms like Netlify, Vercel, or similar services that support React applications.
 
-## Can I connect a custom domain to my Lovable project?
+## Features
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- Multi-team competition (4-5 teams)
+- 8 quarters, 10 minutes each
+- ₹1 crore starting capital
+- 12 global cities with unique market characteristics
+- 4 phone tiers: Luxury, Flagship, Mid-tier, Lower-tier
+- Real-time stock trading system
+- Strategic decisions: production, pricing, R&D, marketing, distribution

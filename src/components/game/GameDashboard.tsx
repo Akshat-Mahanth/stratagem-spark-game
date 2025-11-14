@@ -47,7 +47,7 @@ const GameDashboard = ({ game, team }: GameDashboardProps) => {
     fetchTeams();
 
     const metricsChannel = supabase
-      .channel("metrics-updates")
+      .channel(`metrics-updates-${team.id}`)
       .on(
         "postgres_changes",
         {
@@ -60,10 +60,18 @@ const GameDashboard = ({ game, team }: GameDashboardProps) => {
           fetchMetrics();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Metrics subscription status:", status);
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          console.error("Metrics subscription failed, retrying...");
+          setTimeout(() => {
+            fetchMetrics();
+          }, 2000);
+        }
+      });
 
     const teamsChannel = supabase
-      .channel("teams-updates-dashboard")
+      .channel(`teams-updates-dashboard-${game.id}`)
       .on(
         "postgres_changes",
         {
@@ -76,10 +84,18 @@ const GameDashboard = ({ game, team }: GameDashboardProps) => {
           fetchTeams();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Teams subscription status:", status);
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          console.error("Teams subscription failed, retrying...");
+          setTimeout(() => {
+            fetchTeams();
+          }, 2000);
+        }
+      });
 
     const gameChannel = supabase
-      .channel("game-updates-dashboard")
+      .channel(`game-updates-dashboard-${game.id}`)
       .on(
         "postgres_changes",
         {
@@ -88,19 +104,29 @@ const GameDashboard = ({ game, team }: GameDashboardProps) => {
           table: "games",
           filter: `id=eq.${game.id}`,
         },
-        () => {
-          // Trigger a page refresh or re-fetch when game updates
-          window.location.reload();
+        (payload) => {
+          // Game state is already handled by parent Game component
+          // No need to reload the page - just log the update
+          console.log("Game update received in dashboard:", payload);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Game subscription status:", status);
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          console.error("Game subscription failed, retrying...");
+          setTimeout(() => {
+            fetchMetrics();
+            fetchTeams();
+          }, 2000);
+        }
+      });
 
     return () => {
       supabase.removeChannel(metricsChannel);
       supabase.removeChannel(teamsChannel);
       supabase.removeChannel(gameChannel);
     };
-  }, [team, game.current_quarter, game.id]);
+  }, [team?.id, game.current_quarter, game.id]);
 
   if (!team) {
     return (

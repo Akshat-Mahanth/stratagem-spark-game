@@ -26,7 +26,7 @@ const MetricsPanel = ({ team, currentQuarter }: MetricsPanelProps) => {
     fetchMetrics();
 
     const channel = supabase
-      .channel("metrics-panel-updates")
+      .channel(`metrics-panel-updates-${team.id}-${Date.now()}`)
       .on(
         "postgres_changes",
         {
