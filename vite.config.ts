@@ -15,31 +15,6 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          // Vendor chunks
-          'react-vendor': ['react', 'react-dom'],
-          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-slot', '@radix-ui/react-toast'],
-          'chart-vendor': ['recharts'],
-          'supabase-vendor': ['@supabase/supabase-js'],
-          
-          // Game components
-          'game-components': [
-            './src/components/game/HostDashboard.tsx',
-            './src/components/game/GameDashboard.tsx',
-            './src/components/game/WaitingRoom.tsx'
-          ],
-          
-          // UI components
-          'ui-components': [
-            './src/components/ui/button.tsx',
-            './src/components/ui/card.tsx',
-            './src/components/ui/SpeedometerChart.tsx'
-          ]
-        }
-      }
-    },
     chunkSizeWarningLimit: 1000
   }
 }));
