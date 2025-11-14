@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+
+=======
 # Strategic Manufacturing - Business Simulation Game
 
 ## Project Overview
@@ -63,3 +66,4 @@ You can deploy this project using various hosting platforms like Netlify, Vercel
 - 4 phone tiers: Luxury, Flagship, Mid-tier, Lower-tier
 - Real-time stock trading system
 - Strategic decisions: production, pricing, R&D, marketing, distribution
+>>>>>>> 69f8e29 (Describe your change)
